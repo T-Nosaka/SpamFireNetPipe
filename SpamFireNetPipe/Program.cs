@@ -59,6 +59,12 @@ namespace SpamFireNetPipe
                 }
             }
 
+            //Spam Check Server
+            //RBL
+            spamfilter.AddDNSBL("zen.spamhaus.org");
+            //Custom Link
+            spamfilter.AddCustomURLLink("hoge.hoge.xyz");
+
             var server = new netcatserver(IPAddress.Any, 8888);
 
             server.OnCreatePipeTerminal += (tcplient, disconnectcall) =>
