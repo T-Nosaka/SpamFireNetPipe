@@ -44,7 +44,7 @@ SUBJECT=`formail -c -xSubject:`
 *
 {
    :0 f
-   |nc <h3>[SpamFireNetPipe active IPAddress]</h3> 8888
+   |nc [SpamFireNetPipe active IPAddress] 8888
 
    :0 f
    * (1)
