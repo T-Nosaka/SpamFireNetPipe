@@ -25,20 +25,20 @@ git clone https://github.com/T-Nosaka/SpamFireNetPipe.git
 
 # Usage
 
-Start deamon<br>
+* Start deamon<br>
 
 ```bash
 cd SpamFireNetPipe/SpamFireNetPipe
 nohup dotnet run --configuration Release &
 ```
 
-Stop daemon<br>
+* Stop daemon<br>
 ```bash
 ps -x | grep SpamFireNetPipe
 kill [pid]
 ```
 
-.Procmail<br>
+* .Procmail<br>
 ```bash
 SUBJECT=`formail -c -xSubject:`
 
@@ -59,13 +59,33 @@ SUBJECT=`formail -c -xSubject:`
 |formail -i "Subject: [SpamFire] $SUBJECT" |formail -A "X-Spam-Check: SpamFire"
 ```
 
-Program.cs<br>
+* Program.cs<br>
 
 Other DNSBLs can be added by modifying the code below.
 If CUSTOMURLLINK matches the URLLINK of HTML mail, it will be judged as spam.
 
 spamfilter.AddDNSBL("zen.spamhaus.org");<br>
 spamfilter.AddCustomURLLink("hoge.hoge.xyz");<br>
+
+* SpamFilter.cs<br>
+It is possible to extend HTML checking by overriding SpamFilter.
+
+```bash
+protected override bool AnalyzaHTML(string html, OnHrefAnalyzaHTMLDelegate hrefcallback = null)
+{
+    var bResult = base.AnalyzaHTML(html, (targethref) =>
+    {
+        //XXXX Web Filter
+        if (ChkXXXX(targethref) == true)
+            return true;
+
+        return false;
+    });
+
+    return bResult;
+}
+```
+
 
 # Author
 
