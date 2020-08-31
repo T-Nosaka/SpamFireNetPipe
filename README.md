@@ -11,10 +11,10 @@ SpamFireNetPipe
 
 # Requirement
 
-C# dotnet core 3.1
-HtmlAgilityPack
-MimeKit
-Newtonsoft.Json
+* C# dotnet core 3.1
+* HtmlAgilityPack
+* MimeKit
+* Newtonsoft.Json
 
 # Installation
 
@@ -23,12 +23,14 @@ git clone https://github.com/T-Nosaka/SpamFireNetPipe.git
 
 # Usage
 
-Start deamon
+Start deamon<br>
 
+```bash
 cd SpamFireNetPipe/SpamFireNetPipe
 nohup dotnet run --configuration Release &
+```
 
-Stop daemon
+Stop daemon<br>
 ps -x | grep SpamFireNetPipe
 kill [pid]
 
