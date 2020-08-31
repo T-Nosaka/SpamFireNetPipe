@@ -3,11 +3,13 @@
 SpamFireNetPipe
 
 
-# DEMO
-
-
 # Features
 
+This is a tool to filter Spam mail using procmail.
+It is a server software that analyzes the mail contents with netcat and returns the result.
+By changing SpamFilter, you can judge in various ways.
+Written in C#, it can be easily modified by a Windows engineer.
+Since it can be executed with dotnet core, it also works on Linux.
 
 # Requirement
 
@@ -56,6 +58,14 @@ SUBJECT=`formail -c -xSubject:`
 :0 ef
 |formail -i "Subject: [SpamFire] $SUBJECT" |formail -A "X-Spam-Check: SpamFire"
 ```
+
+Program.cs<br>
+
+Other DNSBLs can be added by modifying the code below.
+If CUSTOMURLLINK matches the URLLINK of HTML mail, it will be judged as spam.
+
+spamfilter.AddDNSBL("zen.spamhaus.org");<br>
+spamfilter.AddCustomURLLink("hoge.hoge.xyz");<br>
 
 # Author
 
