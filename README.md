@@ -31,17 +31,20 @@ nohup dotnet run --configuration Release &
 ```
 
 Stop daemon<br>
+```bash
 ps -x | grep SpamFireNetPipe
 kill [pid]
+```
 
-.Procmail
+.Procmail<br>
+```bash
 SUBJECT=`formail -c -xSubject:`
 
 :0 cw
 *
 {
    :0 f
-   |nc [SpamFireNetPipe active IPAddress] 8888
+   |nc <h3>[SpamFireNetPipe active IPAddress]</h3> 8888
 
    :0 f
    * (1)
@@ -52,7 +55,7 @@ SUBJECT=`formail -c -xSubject:`
 }
 :0 ef
 |formail -i "Subject: [SpamFire] $SUBJECT" |formail -A "X-Spam-Check: SpamFire"
-
+```
 
 # Author
 
