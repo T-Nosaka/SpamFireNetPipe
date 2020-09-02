@@ -418,33 +418,30 @@ namespace SpamAttack
             doc.LoadHtml(html);
 
             var anodecollection = doc.DocumentNode.SelectNodes("//a");
-            HtmlNode anode = null;
             if (anodecollection != null)
-                anode = anodecollection[0];
-            while (anode != null)
             {
-                var reftext = anode.Attributes["href"];
-                if (reftext != null)
+                foreach( var anode in anodecollection)
                 {
-                    try
+                    var reftext = anode.Attributes["href"];
+                    if (reftext != null)
                     {
-                        var targeturl = HrefStrip(reftext.Value);
-                        var host = new Uri(targeturl).Host;
-                        if (DNSBL(host) == true)
-                            return true;
+                        try
+                        {
+                            var targeturl = HrefStrip(reftext.Value);
+                            var host = new Uri(targeturl).Host;
+                            if (DNSBL(host) == true)
+                                return true;
 
-                        //Custom static url
-                        if (m_blackurl_custom_list.Any(word => host.IndexOf(word) >= 0) == true)
-                            return true;
+                            //カスタム
+                            if (m_blackurl_custom_list.Any(word => host.IndexOf(word) >= 0) == true)
+                                return true;
 
-                        //Custom dynamic url
-                        if (hrefcallback?.Invoke(targeturl) == true)
-                            return true;
+                            if (hrefcallback?.Invoke(targeturl) == true)
+                                return true;
+                        }
+                        catch { }
                     }
-                    catch { }
                 }
-
-                anode = anode.NextSibling;
             }
 
             return false;
