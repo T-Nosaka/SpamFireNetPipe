@@ -487,7 +487,11 @@ namespace SpamAttack
                         try
                         {
                             var targeturl = HrefStrip(reftext.Value);
-                            var host = new Uri(targeturl).Host;
+                            var uri = new Uri(targeturl);
+                            if (uri.Scheme == "file")
+                                continue;
+
+                            var host = uri.Host;
                             if (DNSBL(host) == true)
                                 return true;
 
