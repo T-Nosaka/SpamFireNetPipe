@@ -107,20 +107,23 @@ namespace SpamAttack
 #endif
 
                 //Analyzing Received in header
-                var rsvstr = string.Empty;
                 var receivelist = mail.Headers.Where(head => head.Id == MimeKit.HeaderId.Received).ToList();
                 foreach (var head in receivelist)
                 {
                     if (bDnsBL == true)
                         break;
 
-                    var address = AnalyzedReceived(head.Value);
-                    if (address != string.Empty && bDnsBL == false)
+                    var addresslist = AnalyzedReceived(head.Value);
+                    foreach (var address in addresslist)
                     {
-                        bDnsBL = DNSBL(address);
-                    }
+                        if (bDnsBL == true)
+                            break;
 
-                    rsvstr += $"[{address}]";
+                        if (address != string.Empty)
+                        {
+                            bDnsBL = DNSBL(address);
+                        }
+                    }
                 }
 
                 if (bDnsBL == false)
@@ -155,28 +158,128 @@ namespace SpamAttack
         }
 
         /// <summary>
+        /// Filter mark
+        /// </summary>
+        /// <param name="targetstr"></param>
+        /// <returns></returns>
+        protected string FilterMark( string targetstr)
+        {
+            try
+            {
+                //Cut mark
+                bool bClean = false;
+                while (bClean == false)
+                {
+                    bClean = true;
+                    var f = targetstr.IndexOf('[');
+                    if (f >= 0)
+                    {
+                        var e = targetstr.IndexOf(']', f + 1);
+                        var realIP = targetstr.Substring(f + 1, e - f - 1);
+                        targetstr = realIP;
+                        bClean = false;
+                    }
+
+                    f = targetstr.IndexOf('(');
+                    if (f >= 0)
+                    {
+                        var e = targetstr.IndexOf(')', f + 1);
+                        var realIP = targetstr.Substring(f + 1, e - f - 1);
+                        targetstr = realIP;
+                        bClean = false;
+                    }
+                }
+
+                if (targetstr.IndexOf("HELO ") == 0)
+                {
+                    var s = targetstr.Split(' ');
+                    targetstr = s[1];
+                }
+
+                if (targetstr.IndexOf(",") >= 0 || targetstr.IndexOf("@") >= 0)
+                {
+                    foreach (var s in targetstr.Split(' '))
+                    {
+                        if (s.Contains("."))
+                        {
+                            try
+                            {
+                                var uri = new Uri($"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{s}");
+                                targetstr = uri.Host;
+                                break;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                return targetstr;
+            }
+            catch { }
+
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Incoming server analysis
         /// </summary>
         /// <param name="val"></param>
         /// <returns></returns>
-        protected string AnalyzedReceived(string val)
+        protected string[] AnalyzedReceived(string val)
         {
+            var result = new Dictionary<string,string>();
             try
             {
-                var result = string.Empty;
+                //Measures fake domain
+                {
+                    var fC = val.IndexOf('[');
+                    if (fC >= 0)
+                    {
+                        var eC = val.IndexOf(']', fC + 1);
+                        var realIP = val.Substring(fC + 1, eC - fC - 1);
+                        var pureIP = realIP.Trim();
+                        pureIP = FilterMark(pureIP);
+                        if (pureIP.Length > 0 && pureIP.IndexOf(" ") < 0)
+                        {
+                            if (pureIP.IndexOf(".") > 0)
+                            {
+                                result[pureIP] = pureIP;
+                            }
+                        }
+                    }
 
-                string targetstr = string.Empty;
-                var esplitlist = val.Split(' ');
+                    var fC2 = val.IndexOf('(');
+                    if (fC2 >= 0)
+                    {
+                        var eC = val.IndexOf(')', fC2 + 1);
+                        var realIP = val.Substring(fC2 + 1, eC - fC2 - 1);
+                        var pureIP = realIP.Trim();
+                        pureIP = FilterMark(pureIP);
+                        if (pureIP.Length > 0 && pureIP.IndexOf(" ") < 0)
+                        {
+                            if (pureIP.IndexOf(".") > 0)
+                            {
+                                result[pureIP] = pureIP;
+                            }
+                        }
+                    }
+                }
+
+                var esplitlist = val.Split(new char[]{ ' ','\t','\r','\n' });
                 var bFind = false;
                 foreach (var tk in esplitlist)
                 {
                     if (bFind == true)
                     {
-                        if (tk.IndexOf(".") > 0)
+                        var puretk = tk.Trim();
+                        if (puretk.Length > 0 && puretk.IndexOf(" ") < 0)
                         {
-                            targetstr = tk;
-                            break;
+                            if (puretk.IndexOf(".") > 0)
+                            {
+                                result[FilterMark(puretk)] = puretk;
+                            }
                         }
+
                         bFind = false;
                     }
                     switch (tk.ToLower())
@@ -189,56 +292,12 @@ namespace SpamAttack
                             break;
                     }
                 }
-                if (targetstr == string.Empty)
-                    targetstr = val;
-                else
-                    result = targetstr;
-
-                var f = targetstr.IndexOf('[');
-                if (f >= 0)
-                {
-                    var e = targetstr.IndexOf(']', f + 1);
-                    result = targetstr.Substring(f + 1, e - f - 1);
-                    targetstr = result;
-                }
-
-                f = targetstr.IndexOf('(');
-                if (f >= 0)
-                {
-                    var e = targetstr.IndexOf(')', f + 1);
-                    result = targetstr.Substring(f + 1, e - f - 1);
-                    targetstr = result;
-                }
-
-                if (result.IndexOf("HELO ") == 0)
-                {
-                    var s = result.Split(' ');
-                    result = s[1];
-                }
-
-                if (result.IndexOf(",") >= 0 || result.IndexOf("@") >= 0)
-                {
-                    foreach (var s in val.Split(' '))
-                    {
-                        if (s.Contains("."))
-                        {
-                            try
-                            {
-                                var uri = new Uri($"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{s}");
-                                result = uri.Host;
-                                break;
-                            }
-                            catch { }
-                        }
-                    }
-                }
-
-                return result;
             }
             catch
             {
-                return string.Empty;
             }
+
+            return result.Keys.ToArray();
         }
 
         /// <summary>
