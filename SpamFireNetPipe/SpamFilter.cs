@@ -371,8 +371,7 @@ namespace SpamAttack
         /// <param name="address"></param>
         /// <param name="blacklist"></param>
         /// <returns></returns>
-
-        protected bool DNSBLInner(string address, string blacklist)
+        protected virtual bool DNSBLInner(string address, string blacklist)
         {
             //Check IPv4
             IPAddress ipv4 = null;
